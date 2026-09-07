@@ -1,0 +1,431 @@
+# Kubernetes equivalent of ecommerce-compose.yml.
+# The application images are local images, so imagePullPolicy is set to Never.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-data
+  namespace: ecommerce
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka-broker
+  namespace: ecommerce
+spec:
+  serviceName: kafka-broker
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-broker
+  template:
+    metadata:
+      labels:
+        app: kafka-broker
+    spec:
+      containers:
+        - name: kafka-broker
+          image: confluentinc/cp-kafka:8.3.1
+          ports:
+            - name: external
+              containerPort: 9092
+            - name: internal
+              containerPort: 29092
+            - name: controller
+              containerPort: 9093
+          env:
+            - name: CLUSTER_ID
+              value: WnLkTHhkQaiJbwP8FClPhw
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_PROCESS_ROLES
+              value: broker,controller
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: 1@kafka-broker:9093
+            - name: KAFKA_LISTENERS
+              value: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092
+            # Internal clients use kafka-broker:29092. Local clients use localhost:30092.
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: PLAINTEXT://kafka-broker:29092,EXTERNAL://localhost:30092
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: CONTROLLER
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: PLAINTEXT
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: "0"
+            - name: KAFKA_LOG_DIRS
+              value: /var/lib/kafka/data
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: kafka-data
+          persistentVolumeClaim:
+            claimName: kafka-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-broker
+  namespace: ecommerce
+spec:
+  selector:
+    app: kafka-broker
+  ports:
+    - name: internal
+      port: 29092
+      targetPort: internal
+    - name: controller
+      port: 9093
+      targetPort: controller
+    - name: external
+      port: 9092
+      targetPort: external
+      nodePort: 30092
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-ui
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-ui
+  template:
+    metadata:
+      labels:
+        app: kafka-ui
+    spec:
+      containers:
+        - name: kafka-ui
+          image: provectuslabs/kafka-ui:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DYNAMIC_CONFIG_ENABLED
+              value: "true"
+            - name: KAFKA_CLUSTERS_0_NAME
+              value: local-cluster
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: kafka-broker:29092
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-ui
+  namespace: ecommerce
+spec:
+  selector:
+    app: kafka-ui
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: orders-data
+  namespace: ecommerce
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-service
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders-service
+  template:
+    metadata:
+      labels:
+        app: orders-service
+    spec:
+      containers:
+        - name: orders-service
+          image: orders-service:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9000
+          env:
+            - name: APP_PORT
+              value: "9000"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-broker:29092
+          volumeMounts:
+            - name: orders-data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: orders-data
+          persistentVolumeClaim:
+            claimName: orders-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: orders-service
+  ports:
+    - port: 9000
+      targetPort: 9000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: customers-data
+  namespace: ecommerce
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customers-service
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customers-service
+  template:
+    metadata:
+      labels:
+        app: customers-service
+    spec:
+      containers:
+        - name: customers-service
+          image: customers-service:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9010
+          env:
+            - name: APP_PORT
+              value: "9010"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-broker:29092
+          volumeMounts:
+            - name: customers-data
+              mountPath: /var/lib/kafka-broker/data
+      volumes:
+        - name: customers-data
+          persistentVolumeClaim:
+            claimName: customers-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customers-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: customers-service
+  ports:
+    - port: 9010
+      targetPort: 9010
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: inventory-data
+  namespace: ecommerce
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+        - name: inventory-service
+          image: inventory-service:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9020
+          env:
+            - name: APP_PORT
+              value: "9020"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-broker:29092
+          volumeMounts:
+            - name: inventory-data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: inventory-data
+          persistentVolumeClaim:
+            claimName: inventory-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: inventory-service
+  ports:
+    - port: 9020
+      targetPort: 9020
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: payments-data
+  namespace: ecommerce
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-service
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payments-service
+  template:
+    metadata:
+      labels:
+        app: payments-service
+    spec:
+      containers:
+        - name: payments-service
+          image: payments-service:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9030
+          env:
+            - name: APP_PORT
+              value: "9030"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-broker:29092
+          volumeMounts:
+            - name: payments-data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: payments-data
+          persistentVolumeClaim:
+            claimName: payments-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: payments-service
+  ports:
+    - port: 9030
+      targetPort: 9030
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: invoices-data
+  namespace: ecommerce
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invoices-service
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: invoices-service
+  template:
+    metadata:
+      labels:
+        app: invoices-service
+    spec:
+      containers:
+        - name: invoices-service
+          image: invoices-service:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9040
+          env:
+            - name: APP_PORT
+              value: "9040"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-broker:29092
+          volumeMounts:
+            - name: invoices-data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: invoices-data
+          persistentVolumeClaim:
+            claimName: invoices-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: invoices-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: invoices-service
+  ports:
+    - port: 9040
+      targetPort: 9040
+  type: ClusterIP

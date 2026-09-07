@@ -1,0 +1,140 @@
+# Document: ecommerce-compose.yml
+# Author: Wagner O. Wutzke
+# Docker Compose file for instantiating containers for the event-drive ecommerce microservices:
+# - orders
+# - customers
+# - inventory
+# - payments
+# - invoices
+# - shipments
+# It also instantiates a Kafka Broker for the messaging exchange.
+
+networks:
+  kafka-net:
+    driver: bridge
+
+name: ecommerce-app-stack
+
+services:
+
+  # # # # # # # # #  KAFKA BROKER  # # # # # # # # #
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    extra_hosts:
+      host.docker.internal: "host-gateway"
+    environment:
+      CLUSTER_ID: "WnLkTHhkQaiJbwP8FClPhw"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - ./volumes/kafka-data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+
+  # # # # # # # # #  KAFKA UI  # # # # # # # # #
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    networks:
+      - kafka-net
+    ports:
+      - "8080:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: 'local-cluster'
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 'kafka:29092'
+    depends_on:
+      - kafka
+
+  # # # # # # # # #  ORDERS SERVICE  # # # # # # # # #
+  orders-service:
+    image: orders-service:local
+    container_name: orders-service
+    ports:
+      - "9000:9000"
+    environment:
+      APP_PORT: 9000
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    volumes:
+      - ./volumes/orders-data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+    depends_on:
+      - kafka
+
+
+  # # # # # # # # #  CUSTOMERS SERVICE  # # # # # # # # #
+  customers-service:
+    image: customers-service:local
+    container_name: customers-service
+    ports:
+      - "9010:9010"
+    environment:
+      APP_PORT: 9010
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    volumes:
+      - ./volumes/customers-data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+    depends_on:
+      - kafka
+
+  # # # # # # # # #  INVENTORY SERVICE  # # # # # # # # #
+  inventory-service:
+    image: inventory-service:local
+    container_name: inventory-service
+    ports:
+      - "9020:9020"
+    environment:
+      APP_PORT: 9020
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    volumes:
+      - ./volumes/inventory-data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+    depends_on:
+      - kafka
+
+  # # # # # # # # #  PAYMENTS SERVICE  # # # # # # # # #
+  payments-service:
+    image: payments-service:local
+    container_name: payments-service
+    ports:
+      - "9030:9030"
+    environment:
+      APP_PORT: 9030
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    volumes:
+      - ./volumes/payments-data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+    depends_on:
+      - kafka
+
+  # # # # # # # # #  INVOICES SERVICE  # # # # # # # # #
+  invoices-service:
+    image: invoices-service:local
+    container_name: invoices-service
+    ports:
+      - "9040:9040"
+    environment:
+      APP_PORT: 9040
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    volumes:
+      - ./volumes/invoices-data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+    depends_on:
+      - kafka
