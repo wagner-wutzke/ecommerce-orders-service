@@ -17,6 +17,7 @@ spec:
     requests:
       storage: 5Gi
 ---
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -77,6 +78,8 @@ spec:
           persistentVolumeClaim:
             claimName: kafka-data
 ---
+
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -139,6 +142,8 @@ spec:
       targetPort: 8080
       nodePort: 30080
   type: NodePort
+
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
