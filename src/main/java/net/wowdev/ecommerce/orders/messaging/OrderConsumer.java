@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.wowdev.ecommerce.domain.events.InventoryUpdateFailedEvent;
 import net.wowdev.ecommerce.domain.events.OrderProcessingCompletedEvent;
 import net.wowdev.ecommerce.domain.events.OrderProcessingFailedEvent;
+import net.wowdev.ecommerce.domain.events.ShipmentCompletedEvent;
+import net.wowdev.ecommerce.domain.events.ShipmentFailedEvent;
 import net.wowdev.ecommerce.orders.service.OrderService;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,7 +17,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @KafkaListener(
     groupId = "${spring.kafka.consumer.group-id}",
-    topics = {"${app.kafka.orders-topic}", "${app.kafka.inventory-topic}"},
+    topics = {
+      "${app.kafka.orders-topic}",
+      "${app.kafka.inventory-topic}",
+      "{app.kafka.shipments-topic}"
+    },
     containerFactory = "kafkaListenerContainerFactory")
 public class OrderConsumer {
 
@@ -44,6 +50,15 @@ public class OrderConsumer {
         event.origin(),
         event.eventId());
     orderService.cancel(event.orderDTO(), event.reason());
+  }
+
+  @KafkaHandler
+  public void handleShipmentFiled(ShipmentCompletedEvent event) {
+    log.debug(
+        ">> Processing ShipmentCompletedEvent sent by {}. Event id {}",
+        event.origin(),
+        event.eventId());
+    orderService.complete(event.orderDTO());
   }
 
   @KafkaHandler(isDefault = true)

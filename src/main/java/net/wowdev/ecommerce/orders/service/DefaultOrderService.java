@@ -114,6 +114,12 @@ public class DefaultOrderService implements OrderService {
     return savedOrderDTO;
   }
 
+  @Transactional
+  @Override
+  public void complete(final OrderDTO orderDTO) {
+    log.debug(">> Order process successfully finished: {}", orderDTO.getId());
+  }
+
   protected void calculateOrderAmounts(OrderDTO orderDTO) {
     BigDecimal orderAmount =
         orderDTO.getOrderLines().stream()
@@ -153,4 +159,5 @@ public class DefaultOrderService implements OrderService {
             ORIGIN_SERVICE);
     orderProducer.publish(orderProcessingStartedEvent);
   }
+
 }

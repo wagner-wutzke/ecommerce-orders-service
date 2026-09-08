@@ -4,6 +4,7 @@ import java.util.UUID;
 import net.wowdev.ecommerce.domain.dto.OrderDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface OrderService {
   OrderDTO findById(UUID id);
@@ -17,4 +18,7 @@ public interface OrderService {
   void delete(UUID id);
 
   void cancel(final OrderDTO orderDTO, final String reason);
+
+  @Transactional
+  void complete(OrderDTO orderDTO);
 }
