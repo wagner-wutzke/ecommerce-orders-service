@@ -154,7 +154,7 @@ services:
       APP_PORT: 9050
       KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
       LOG_LEVEL_DATAREPLICATION: "ERROR"
-      SERVICE_SHIPMENTS_FAILING: true
+      SERVICE_SHIPMENTS_FAILING: false
     volumes:
       - ./volumes/shipments-data:/var/lib/kafka/data
     networks:

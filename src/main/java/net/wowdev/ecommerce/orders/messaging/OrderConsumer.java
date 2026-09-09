@@ -6,7 +6,6 @@ import net.wowdev.ecommerce.domain.events.InventoryUpdateFailedEvent;
 import net.wowdev.ecommerce.domain.events.OrderProcessingCompletedEvent;
 import net.wowdev.ecommerce.domain.events.OrderProcessingFailedEvent;
 import net.wowdev.ecommerce.domain.events.ShipmentCompletedEvent;
-import net.wowdev.ecommerce.domain.events.ShipmentFailedEvent;
 import net.wowdev.ecommerce.orders.service.OrderService;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -20,7 +19,7 @@ import org.springframework.stereotype.Component;
     topics = {
       "${app.kafka.orders-topic}",
       "${app.kafka.inventory-topic}",
-      "{app.kafka.shipments-topic}"
+      "${app.kafka.shipments-topic}"
     },
     containerFactory = "kafkaListenerContainerFactory")
 public class OrderConsumer {
@@ -28,7 +27,7 @@ public class OrderConsumer {
   private final OrderService orderService;
 
   @KafkaHandler
-  public void handleOrderProcessingFailed(OrderProcessingFailedEvent event) {
+  public void handle(OrderProcessingFailedEvent event) {
     log.debug(
         ">>>> Processing OrderProcessingFailedEvent sent by {}. Event id: {}",
         event.origin(),
@@ -36,7 +35,7 @@ public class OrderConsumer {
   }
 
   @KafkaHandler
-  public void handleOrderProcessingCompleted(OrderProcessingCompletedEvent event) {
+  public void handle(OrderProcessingCompletedEvent event) {
     log.debug(
         ">> Processing OrderProcessingCompletedEvent sent by {}. Event id: {}",
         event.origin(),
@@ -44,7 +43,7 @@ public class OrderConsumer {
   }
 
   @KafkaHandler
-  public void handleInventoryUpdateFailed(InventoryUpdateFailedEvent event) {
+  public void handle(InventoryUpdateFailedEvent event) {
     log.debug(
         ">> Processing InventoryUpdateFailedEvent sent by {}. Event id {}",
         event.origin(),
@@ -53,7 +52,7 @@ public class OrderConsumer {
   }
 
   @KafkaHandler
-  public void handleShipmentFiled(ShipmentCompletedEvent event) {
+  public void handle(ShipmentCompletedEvent event) {
     log.debug(
         ">> Processing ShipmentCompletedEvent sent by {}. Event id {}",
         event.origin(),

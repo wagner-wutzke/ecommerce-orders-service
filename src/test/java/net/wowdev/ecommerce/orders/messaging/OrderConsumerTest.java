@@ -19,12 +19,12 @@ class OrderConsumerTest {
 
   @Test
   void handlesFailedOrders() {
-    consumer.handleOrderProcessingFailed(mock(OrderProcessingFailedEvent.class));
+    consumer.handle(mock(OrderProcessingFailedEvent.class));
   }
 
   @Test
   void handlesCompletedOrders() {
-    consumer.handleOrderProcessingCompleted(mock(OrderProcessingCompletedEvent.class));
+    consumer.handle(mock(OrderProcessingCompletedEvent.class));
   }
 
   @Test
@@ -44,7 +44,7 @@ class OrderConsumerTest {
             Instant.parse("2026-01-01T00:00:00Z"),
             "INVENTORY-SERVICE");
 
-    consumer.handleInventoryUpdateFailed(event);
+    consumer.handle(event);
 
     verify(orderService).cancel(order, "Insufficient stock");
   }
