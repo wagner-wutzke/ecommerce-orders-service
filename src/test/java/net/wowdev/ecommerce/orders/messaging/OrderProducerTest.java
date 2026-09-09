@@ -5,20 +5,20 @@ import static org.mockito.Mockito.verify;
 
 import java.time.Instant;
 import java.util.UUID;
-import net.wowdev.ecommerce.domain.events.OrderCreatedEvent;
-import net.wowdev.ecommerce.domain.events.OrderProcessingStartedEvent;
+import net.wowdev.ecommerce.domain.events.CustomerReplicationRequested;
+import net.wowdev.ecommerce.domain.events.OrderCreated;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.core.KafkaTemplate;
 
 class OrderProducerTest {
 
   @Test
-  void publishesOrderCreatedEventWithEventIdAsKey() {
+  void publishesOrderCreatedWithEventIdAsKey() {
     final KafkaTemplate<String, Object> template = mock(KafkaTemplate.class);
     final OrderProducer producer = new OrderProducer(template, "orders.v1");
     final UUID eventId = UUID.randomUUID();
-    final OrderCreatedEvent event =
-        new OrderCreatedEvent(
+    final OrderCreated event =
+        new OrderCreated(
             eventId,
             "TX-1",
             null,
@@ -31,12 +31,12 @@ class OrderProducerTest {
   }
 
   @Test
-  void publishesOrderProcessingStartedEventWithEventIdAsKey() {
+  void publishesCustomerReplicationRequestedWithEventIdAsKey() {
     final KafkaTemplate<String, Object> template = mock(KafkaTemplate.class);
     final OrderProducer producer = new OrderProducer(template, "orders.v1");
     final UUID eventId = UUID.randomUUID();
-    final OrderProcessingStartedEvent event =
-        new OrderProcessingStartedEvent(
+    final CustomerReplicationRequested event =
+        new CustomerReplicationRequested(
             eventId,
             "TX-1",
             null,

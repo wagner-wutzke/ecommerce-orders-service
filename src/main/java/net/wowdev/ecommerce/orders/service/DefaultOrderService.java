@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.wowdev.ecommerce.domain.dto.OrderDTO;
 import net.wowdev.ecommerce.domain.entity.OrderEntity;
 import net.wowdev.ecommerce.domain.enums.OrderStatus;
-import net.wowdev.ecommerce.domain.events.OrderCreatedEvent;
-import net.wowdev.ecommerce.domain.events.OrderProcessingStartedEvent;
+import net.wowdev.ecommerce.domain.events.CustomerReplicationRequested;
+import net.wowdev.ecommerce.domain.events.OrderCreated;
 import net.wowdev.ecommerce.domain.mapper.OrderMapper;
 import net.wowdev.ecommerce.orders.messaging.OrderProducer;
 import net.wowdev.ecommerce.orders.repository.OrderRepository;
@@ -138,26 +138,26 @@ public class DefaultOrderService implements OrderService {
   }
 
   private void publishOrderCreated(OrderDTO savedOrderDTO) {
-    OrderCreatedEvent orderCreatedEvent =
-        new OrderCreatedEvent(
+    OrderCreated event =
+        new OrderCreated(
             UUID.randomUUID(),
             savedOrderDTO.getId().toString(),
             savedOrderDTO,
             Instant.now(),
             OrderProducer.ORIGIN_SERVICE);
     // TODO: persist event before publishing (outbox pattern)
-    orderProducer.publish(orderCreatedEvent);
+    orderProducer.publish(event);
   }
 
   protected void publishOrderProcessingStarted(OrderDTO orderDTO) {
-    OrderProcessingStartedEvent orderProcessingStartedEvent =
-        new OrderProcessingStartedEvent(
+    CustomerReplicationRequested event =
+        new CustomerReplicationRequested(
             UUID.randomUUID(),
             orderDTO.getId().toString(),
             orderDTO,
             Instant.now(),
             ORIGIN_SERVICE);
-    orderProducer.publish(orderProcessingStartedEvent);
+    orderProducer.publish(event);
   }
 
 }

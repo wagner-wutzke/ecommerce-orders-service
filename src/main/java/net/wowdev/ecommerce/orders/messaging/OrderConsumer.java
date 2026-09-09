@@ -2,10 +2,8 @@ package net.wowdev.ecommerce.orders.messaging;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.wowdev.ecommerce.domain.events.InventoryUpdateFailedEvent;
-import net.wowdev.ecommerce.domain.events.OrderProcessingCompletedEvent;
-import net.wowdev.ecommerce.domain.events.OrderProcessingFailedEvent;
-import net.wowdev.ecommerce.domain.events.ShipmentCompletedEvent;
+import net.wowdev.ecommerce.domain.events.InventoryUpdateFailed;
+import net.wowdev.ecommerce.domain.events.ShipmentCompleted;
 import net.wowdev.ecommerce.orders.service.OrderService;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -27,34 +25,18 @@ public class OrderConsumer {
   private final OrderService orderService;
 
   @KafkaHandler
-  public void handle(OrderProcessingFailedEvent event) {
+  public void handle(InventoryUpdateFailed event) {
     log.debug(
-        ">>>> Processing OrderProcessingFailedEvent sent by {}. Event id: {}",
-        event.origin(),
-        event.eventId());
-  }
-
-  @KafkaHandler
-  public void handle(OrderProcessingCompletedEvent event) {
-    log.debug(
-        ">> Processing OrderProcessingCompletedEvent sent by {}. Event id: {}",
-        event.origin(),
-        event.eventId());
-  }
-
-  @KafkaHandler
-  public void handle(InventoryUpdateFailedEvent event) {
-    log.debug(
-        ">> Processing InventoryUpdateFailedEvent sent by {}. Event id {}",
+        ">> Processing InventoryUpdateFailed event sent by {}. Event id {}",
         event.origin(),
         event.eventId());
     orderService.cancel(event.orderDTO(), event.reason());
   }
 
   @KafkaHandler
-  public void handle(ShipmentCompletedEvent event) {
+  public void handle(ShipmentCompleted event) {
     log.debug(
-        ">> Processing ShipmentCompletedEvent sent by {}. Event id {}",
+        ">> Processing ShipmentProcessed event sent by {}. Event id {}",
         event.origin(),
         event.eventId());
     orderService.complete(event.orderDTO());
