@@ -2,7 +2,7 @@ package net.wowdev.ecommerce.orders.messaging;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.wowdev.ecommerce.domain.events.InventoryUpdateFailed;
+import net.wowdev.ecommerce.domain.events.InventoryFailed;
 import net.wowdev.ecommerce.domain.events.ShipmentCompleted;
 import net.wowdev.ecommerce.orders.service.OrderService;
 import org.springframework.kafka.annotation.KafkaHandler;
@@ -25,9 +25,9 @@ public class OrderConsumer {
   private final OrderService orderService;
 
   @KafkaHandler
-  public void handle(InventoryUpdateFailed event) {
+  public void handle(InventoryFailed event) {
     log.debug(
-        ">> Processing InventoryUpdateFailed event sent by {}. Event id {}",
+        ">> Processing InventoryFailed event sent by {}. Event id {}",
         event.origin(),
         event.eventId());
     orderService.cancel(event.orderDTO(), event.reason());
@@ -36,7 +36,7 @@ public class OrderConsumer {
   @KafkaHandler
   public void handle(ShipmentCompleted event) {
     log.debug(
-        ">> Processing ShipmentProcessed event sent by {}. Event id {}",
+        ">> Processing ShipmentCompleted event sent by {}. Event id {}",
         event.origin(),
         event.eventId());
     orderService.complete(event.orderDTO());

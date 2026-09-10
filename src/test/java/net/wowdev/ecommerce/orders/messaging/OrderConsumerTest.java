@@ -6,7 +6,7 @@ import static org.mockito.Mockito.verify;
 import java.time.Instant;
 import java.util.UUID;
 import net.wowdev.ecommerce.domain.dto.OrderDTO;
-import net.wowdev.ecommerce.domain.events.InventoryUpdateFailed;
+import net.wowdev.ecommerce.domain.events.InventoryFailed;
 import net.wowdev.ecommerce.orders.service.OrderService;
 import org.junit.jupiter.api.Test;
 
@@ -21,10 +21,10 @@ class OrderConsumerTest {
   }
 
   @Test
-  void cancelsOrderWhenInventoryUpdateFails() {
+  void cancelsOrderWhenInventoryFails() {
     final OrderDTO order = new OrderDTO();
-    final InventoryUpdateFailed event =
-        new InventoryUpdateFailed(
+    final InventoryFailed event =
+        new InventoryFailed(
             UUID.randomUUID(),
             "transaction-1",
             order,
