@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.util.UUID;
 import net.wowdev.ecommerce.domain.dto.OrderDTO;
 import net.wowdev.ecommerce.domain.events.InventoryFailed;
+import net.wowdev.ecommerce.domain.events.ShipmentCompleted;
+import net.wowdev.ecommerce.domain.dto.ShipmentDTO;
 import net.wowdev.ecommerce.orders.service.OrderService;
 import org.junit.jupiter.api.Test;
 
@@ -35,5 +37,22 @@ class OrderConsumerTest {
     consumer.handle(event);
 
     verify(orderService).cancel(order, "Insufficient stock");
+  }
+
+  @Test
+  void completesOrderWhenShipmentCompletes() {
+    final OrderDTO order = new OrderDTO();
+    final ShipmentCompleted event =
+        new ShipmentCompleted(
+            UUID.randomUUID(),
+            "transaction-2",
+            order,
+            new ShipmentDTO(),
+            Instant.parse("2026-01-01T00:00:00Z"),
+            "SHIPMENTS-SERVICE");
+
+    consumer.handle(event);
+
+    verify(orderService).complete(order);
   }
 }

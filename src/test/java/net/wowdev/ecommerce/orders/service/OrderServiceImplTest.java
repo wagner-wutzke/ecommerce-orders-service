@@ -129,6 +129,15 @@ class OrderServiceImplTest {
   }
 
   @Test
+  void completesOrderWithoutPersistingAnotherOrder() {
+    final OrderDTO order = TestFixtures.orderDto();
+
+    service.complete(order);
+
+    verifyNoInteractions(orderRepository, orderProducer);
+  }
+
+  @Test
   void updatesOrderWithoutPublishingReplacementEvent() {
     final OrderEntity current = TestFixtures.orderEntity();
     final OrderDTO replacement = TestFixtures.orderDto();
