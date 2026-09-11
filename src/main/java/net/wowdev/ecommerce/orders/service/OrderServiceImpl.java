@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class DefaultOrderService implements OrderService {
+public class OrderServiceImpl implements OrderService {
 
   private static final String ORIGIN_SERVICE = "ORDERS-SERVICE";
 
@@ -89,7 +89,6 @@ public class DefaultOrderService implements OrderService {
   @Override
   @Transactional
   public OrderDTO create(final OrderDTO orderDTO) {
-    log.debug(">> Creating new Order record...");
     if (orderDTO.getId() == null) {
       final UUID orderId = UUID.randomUUID();
       orderDTO.setId(orderId);
@@ -106,7 +105,7 @@ public class DefaultOrderService implements OrderService {
     calculateOrderAmounts(orderDTO);
 
     final OrderEntity savedOrderEntity = orderRepository.save(OrderMapper.toEntity(orderDTO));
-    log.debug(">> Created new Order \n\n{}\n", savedOrderEntity);
+    log.debug(">> Created new Order with id: {}", savedOrderEntity.getId());
     final OrderDTO savedOrderDTO = OrderMapper.toDto(savedOrderEntity);
 
     publishOrderCreated(savedOrderDTO);

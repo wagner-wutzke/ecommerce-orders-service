@@ -28,17 +28,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-class DefaultOrderServiceTest {
+class OrderServiceImplTest {
 
   @Mock private OrderRepository orderRepository;
 
   @Mock private OrderProducer orderProducer;
 
-  private DefaultOrderService service;
+  private OrderServiceImpl service;
 
   @BeforeEach
   void setUp() {
-    service = new DefaultOrderService(orderRepository, orderProducer);
+    service = new OrderServiceImpl(orderRepository, orderProducer);
     ReflectionTestUtils.setField(service, "vatRate", 0.15D);
     ReflectionTestUtils.setField(service, "shippingCost", 12.90D);
   }
