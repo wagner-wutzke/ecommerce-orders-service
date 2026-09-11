@@ -12,7 +12,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @Slf4j
 public class OrderProducer {
-
   public static final String ORIGIN_SERVICE = "ORDERS-SERVICE";
   private final KafkaTemplate<String, Object> template;
   private final String ordersTopic;

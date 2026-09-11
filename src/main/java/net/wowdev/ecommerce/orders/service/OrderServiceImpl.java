@@ -26,8 +26,8 @@ public class OrderServiceImpl implements OrderService {
 
   private static final String ORIGIN_SERVICE = "ORDERS-SERVICE";
 
-  private final OrderRepository orderRepository;
-  private final OrderProducer orderProducer;
+  private final OrderRepository repository;
+  private final OrderProducer producer;
 
   @Value("${business.config.vat-rate}")
   private Double vatRate;
@@ -38,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
   @Override
   @Transactional(readOnly = true)
   public OrderDTO findById(final UUID id) {
-    return orderRepository
+    return repository
         .findById(id)
         .map(OrderMapper::toDto)
         .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
@@ -47,14 +47,14 @@ public class OrderServiceImpl implements OrderService {
   @Override
   @Transactional(readOnly = true)
   public Page<OrderDTO> findAll(final Pageable pageable) {
-    return orderRepository.findAll(pageable).map(OrderMapper::toDto);
+    return repository.findAll(pageable).map(OrderMapper::toDto);
   }
 
   @Override
   @Transactional
   public OrderDTO update(final UUID id, final OrderDTO order) {
     OrderEntity current =
-        orderRepository
+        repository
             .findById(id)
             .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
     OrderDTO replacement = OrderMapper.toDto(current);
@@ -66,16 +66,16 @@ public class OrderServiceImpl implements OrderService {
     replacement.setOrderAmount(order.getOrderAmount());
     replacement.setTaxAmount(order.getTaxAmount());
     replacement.setDiscountAmount(order.getDiscountAmount());
-    return OrderMapper.toDto(orderRepository.save(OrderMapper.toEntity(replacement)));
+    return OrderMapper.toDto(repository.save(OrderMapper.toEntity(replacement)));
   }
 
   @Override
   @Transactional
   public void delete(final UUID id) {
-    if (!orderRepository.existsById(id)) {
+    if (!repository.existsById(id)) {
       throw new OrderNotFoundException("Order not found: " + id);
     }
-    orderRepository.deleteById(id);
+    repository.deleteById(id);
   }
 
   @Override
@@ -83,7 +83,7 @@ public class OrderServiceImpl implements OrderService {
   public void cancel(OrderDTO orderDTO, String reason) {
     log.debug("Canceling order {} for the reason: {}", orderDTO.getId(), reason);
     orderDTO.setOrderStatus(OrderStatus.CANCELLED);
-    orderRepository.save(OrderMapper.toEntity(orderDTO));
+    repository.save(OrderMapper.toEntity(orderDTO));
   }
 
   @Override
@@ -104,12 +104,15 @@ public class OrderServiceImpl implements OrderService {
     }
     calculateOrderAmounts(orderDTO);
 
-    final OrderEntity savedOrderEntity = orderRepository.save(OrderMapper.toEntity(orderDTO));
+    // notify Customers services to pre-load customer data for this order
+    publishCustomerReplicationRequested(orderDTO);
+
+    final OrderEntity savedOrderEntity = repository.save(OrderMapper.toEntity(orderDTO));
     log.debug(">> Created new Order with id: {}", savedOrderEntity.getId());
     final OrderDTO savedOrderDTO = OrderMapper.toDto(savedOrderEntity);
 
     publishOrderCreated(savedOrderDTO);
-    publishOrderProcessingStarted(savedOrderDTO);
+
     return savedOrderDTO;
   }
 
@@ -117,7 +120,7 @@ public class OrderServiceImpl implements OrderService {
   @Override
   public void complete(final OrderDTO orderDTO) {
     orderDTO.setOrderStatus(OrderStatus.CREATED);
-    orderRepository.save(OrderMapper.toEntity(orderDTO));
+    repository.save(OrderMapper.toEntity(orderDTO));
     log.debug(">> Order process successfully finished: {}. Order status: {}",
         orderDTO.getId(),
         orderDTO.getOrderStatus());
@@ -149,10 +152,10 @@ public class OrderServiceImpl implements OrderService {
             Instant.now(),
             OrderProducer.ORIGIN_SERVICE);
     // TODO: persist event before publishing (outbox pattern)
-    orderProducer.publish(event);
+    producer.publish(event);
   }
 
-  protected void publishOrderProcessingStarted(OrderDTO orderDTO) {
+  protected void publishCustomerReplicationRequested(OrderDTO orderDTO) {
     CustomerReplicationRequested event =
         new CustomerReplicationRequested(
             UUID.randomUUID(),
@@ -160,7 +163,7 @@ public class OrderServiceImpl implements OrderService {
             orderDTO,
             Instant.now(),
             ORIGIN_SERVICE);
-    orderProducer.publish(event);
+    producer.publish(event);
   }
 
 }
