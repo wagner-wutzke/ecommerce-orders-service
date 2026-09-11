@@ -129,12 +129,13 @@ class OrderServiceImplTest {
   }
 
   @Test
-  void completesOrderWithoutPersistingAnotherOrder() {
+  void completesOrderPersistingSameOrder() {
     final OrderDTO order = TestFixtures.orderDto();
 
     service.complete(order);
 
-    verifyNoInteractions(orderRepository, orderProducer);
+    verify(orderRepository).save(any(OrderEntity.class));
+    verifyNoInteractions(orderProducer);
   }
 
   @Test

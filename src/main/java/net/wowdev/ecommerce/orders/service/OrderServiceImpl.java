@@ -116,7 +116,11 @@ public class OrderServiceImpl implements OrderService {
   @Transactional
   @Override
   public void complete(final OrderDTO orderDTO) {
-    log.debug(">> Order process successfully finished: {}", orderDTO.getId());
+    orderDTO.setOrderStatus(OrderStatus.CREATED);
+    orderRepository.save(OrderMapper.toEntity(orderDTO));
+    log.debug(">> Order process successfully finished: {}. Order status: {}",
+        orderDTO.getId(),
+        orderDTO.getOrderStatus());
   }
 
   protected void calculateOrderAmounts(OrderDTO orderDTO) {
