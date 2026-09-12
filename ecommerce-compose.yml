@@ -144,7 +144,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
       LOG_LEVEL_DATAREPLICATION: "ERROR"
       LOGGING_STRUCTURED_FORMAT_CONSOLE: logstash
-      SERVICE_INVOICES_FAILING: true
+      SERVICE_INVOICES_FAILING: false
     volumes:
       - ./volumes/invoices-data:/var/lib/kafka/data
     networks:
