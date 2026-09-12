@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.wowdev.ecommerce.domain.dto.CustomerDTO;
 import net.wowdev.ecommerce.domain.dto.OrderDTO;
 import net.wowdev.ecommerce.domain.entity.OrderEntity;
 import net.wowdev.ecommerce.domain.enums.OrderStatus;
@@ -102,10 +103,10 @@ public class OrderServiceImpl implements OrderService {
                 orderLine.setId(orderLineId);
               });
     }
-    calculateOrderAmounts(orderDTO);
-
-    // notify Customers services to pre-load customer data for this order
+    // notify Customers service to preload and replicate customer data for this order
     publishCustomerReplicationRequested(orderDTO);
+
+    calculateOrderAmounts(orderDTO);
 
     final OrderEntity savedOrderEntity = repository.save(OrderMapper.toEntity(orderDTO));
     log.debug(">> Created new Order with id: {}", savedOrderEntity.getId());
@@ -156,11 +157,13 @@ public class OrderServiceImpl implements OrderService {
   }
 
   protected void publishCustomerReplicationRequested(OrderDTO orderDTO) {
+    CustomerDTO customerDTO = new CustomerDTO();
+    customerDTO.setId(orderDTO.getCustomerId());
     CustomerReplicationRequested event =
         new CustomerReplicationRequested(
             UUID.randomUUID(),
             orderDTO.getId().toString(),
-            orderDTO,
+            customerDTO,
             Instant.now(),
             ORIGIN_SERVICE);
     producer.publish(event);

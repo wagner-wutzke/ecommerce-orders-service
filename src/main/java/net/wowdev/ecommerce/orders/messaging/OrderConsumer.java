@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 @KafkaListener(
     groupId = "${spring.kafka.consumer.group-id}",
     topics = {
-      "${app.kafka.orders-topic}",
       "${app.kafka.inventory-topic}",
       "${app.kafka.shipments-topic}"
     },
