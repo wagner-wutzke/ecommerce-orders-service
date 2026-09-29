@@ -1,0 +1,112 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-broker
+  namespace: ecommerce
+spec:
+  selector:
+    app: kafka-broker
+  ports:
+    - name: internal
+      port: 29092
+      targetPort: internal
+    - name: controller
+      port: 9093
+      targetPort: controller
+    - name: external
+      port: 9092
+      targetPort: external
+      nodePort: 30092
+  type: NodePort
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-ui
+  namespace: ecommerce
+spec:
+  selector:
+    app: kafka-ui
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+  type: NodePort
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: orders-service
+  ports:
+    - name: external
+      port: 9000
+  type: LoadBalancer
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: customers-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: customers-service
+  ports:
+    - port: 9010
+      targetPort: 9010
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: inventory-service
+  ports:
+    - port: 9020
+      targetPort: 9020
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: payments-service
+  ports:
+    - port: 9030
+      targetPort: 9030
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: invoices-service
+  namespace: ecommerce
+spec:
+  selector:
+    app: invoices-service
+  ports:
+    - port: 9040
+      targetPort: 9040
+  type: ClusterIP
