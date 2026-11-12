@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-class PersistenceConfigTest {
+class PersistenceConfigurationTest {
   @Test
   void createsPersistenceConfiguration() {
-    assertThat(new PersistenceConfig()).isNotNull();
+    assertThat(new PersistenceConfiguration()).isNotNull();
   }
 }

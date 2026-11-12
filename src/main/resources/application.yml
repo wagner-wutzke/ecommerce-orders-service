@@ -44,6 +44,11 @@ spring:
         linger.ms: 0
 
 app:
+  rate-limiting:
+    orders:
+      limit-for-period: ${ORDER_RATE_LIMIT:10}
+      limit-refresh-period: ${ORDER_RATE_REFRESH_PERIOD:1s}
+      timeout-duration: ${ORDER_RATE_TIMEOUT:0s}
   kafka:
     orders-topic: ${KAFKA_ORDERS_TOPIC:orders-topic.v1}
     customers-topic: ${KAFKA_CUSTOMERS_TOPIC:customers-topic.v1}

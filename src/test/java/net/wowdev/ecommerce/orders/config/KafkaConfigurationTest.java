@@ -9,10 +9,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
-class KafkaConfigTest {
+class KafkaConfigurationTest {
   @Test
   void createsConfiguredProducerConsumerAndListenerFactory() {
-    final KafkaConfig config = new KafkaConfig();
+    final KafkaConfiguration config = new KafkaConfiguration();
     ReflectionTestUtils.setField(config, "bootstrapServers", "localhost:9092");
     ReflectionTestUtils.setField(config, "consumerGroup", "orders");
     ReflectionTestUtils.setField(config, "acks", "all");

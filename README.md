@@ -15,7 +15,7 @@ The project is meant to run exclusively on a local environment.
 3. Show in practice the **Choreography based SAGA** pattern in action with multiple microservices.
 4. ~~Show in practice the Idempotence aspect of operations on event-driven microservices.~~ (TO BE DONE)
 5. ~~Show in practice the Retry mechanism + Dead-Letter-Queue for failing operations on event-driven microservices.~~ (TO BE DONE)
-6. ~~Show in practice the Circuit Breaker pattern.~~ (TO BE DONE)
+6. Show in practice the Circuit Breaker pattern. (Payment Service - `circuit-breaker` branch)
 7. Show in practice how to Dockerize a whole Application stack and run it with `docker compose`.
 ## Running with Docker
 In order to create a docker image and run it locally, execute the following commands:

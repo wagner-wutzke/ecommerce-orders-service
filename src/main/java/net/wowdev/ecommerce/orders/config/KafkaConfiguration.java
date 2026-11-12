@@ -21,7 +21,7 @@ import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 @EnableKafka
-public class KafkaConfig {
+public class KafkaConfiguration {
 
   @Value("${spring.kafka.consumer.group-id}")
   private String consumerGroup;
